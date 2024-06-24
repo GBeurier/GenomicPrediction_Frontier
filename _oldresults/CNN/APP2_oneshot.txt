@@ -1,0 +1,24 @@
+Fold n°0 - r²:0.04453506898731306  -  RMSE:6.7179856
+Fold n°1 - r²:-0.14889117976450678  -  RMSE:7.362198
+Fold n°2 - r²:0.02866486408017281  -  RMSE:8.400727
+Fold n°3 - r²:-0.09955521257018862  -  RMSE:7.5428357
+Fold n°4 - r²:0.10903095929298819  -  RMSE:7.7089734
+
+
+
+
+model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Conv1D (filters=128, kernel_size=11, strides=1, activation='relu',input_shape=(nb_features,1)))
+model.add(tf.keras.layers.SpatialDropout1D(0.3))
+model.add(tf.keras.layers.Conv1D (filters=64, kernel_size=11, strides=3, activation='relu'))
+model.add(tf.keras.layers.SpatialDropout1D(0.3))
+model.add(tf.keras.layers.Conv1D (filters=8, kernel_size=9, strides=5, activation='relu'))
+model.add(tf.keras.layers.SpatialDropout1D(0.3))
+model.add(tf.keras.layers.Conv1D (filters=64, kernel_size=13, strides=5, activation='relu'))
+model.add(tf.keras.layers.SpatialDropout1D(0.3))
+model.add(tf.keras.layers.Conv1D (filters=32, kernel_size=9, strides=5, activation='softmax'))
+model.add(tf.keras.layers.Dropout(0.3)) 
+model.add(tf.keras.layers.Flatten())
+model.add(tf.keras.layers.Dense(32, activation='relu'))
+model.add(tf.keras.layers.Dense(nb_traits, activation='sigmoid'))
+model.compile(loss='mean_squared_error', metrics=['mae','mse'], optimizer='adam')

@@ -1,0 +1,39 @@
+Model: "sequential_2"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv1d_8 (Conv1D)           (None, 31703, 128)        1536      
+                                                                 
+ spatial_dropout1d_5 (Spatia  (None, 31703, 128)       0         
+ lDropout1D)                                                     
+                                                                 
+ conv1d_9 (Conv1D)           (None, 10565, 64)         90176     
+                                                                 
+ spatial_dropout1d_6 (Spatia  (None, 10565, 64)        0         
+ lDropout1D)                                                     
+                                                                 
+ conv1d_10 (Conv1D)          (None, 2112, 8)           4616      
+                                                                 
+ spatial_dropout1d_7 (Spatia  (None, 2112, 8)          0         
+ lDropout1D)                                                     
+                                                                 
+ conv1d_11 (Conv1D)          (None, 420, 64)           6720      
+                                                                 
+ spatial_dropout1d_8 (Spatia  (None, 420, 64)          0         
+ lDropout1D)                                                     
+                                                                 
+ conv1d_12 (Conv1D)          (None, 83, 32)            18464     
+                                                                 
+ dropout_2 (Dropout)         (None, 83, 32)            0         
+                                                                 
+ flatten_2 (Flatten)         (None, 2656)              0         
+                                                                 
+ dense_4 (Dense)             (None, 32)                85024     
+                                                                 
+ dense_5 (Dense)             (None, 1)                 33        
+                                                                 
+=================================================================
+Total params: 206,569
+Trainable params: 206,569
+Non-trainable params: 0
+_________________________________________________________________

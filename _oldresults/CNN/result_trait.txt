@@ -1,0 +1,15 @@
+Fold 0
+(02-02 20:07:54)Trait1Dtest - RMSE:59.040- r²:0.432
+(02-02 20:07:54)Trait1Dglobal - RMSE:29.857- r²:0.83
+Fold 1
+(02-02 20:10:10)Trait1Dtest - RMSE:51.227- r²:0.523
+(02-02 20:10:10)Trait1Dglobal - RMSE:46.126- r²:0.614
+Fold 2
+(02-02 20:13:37)Trait1Dtest - RMSE:64.084- r²:0.205
+(02-02 20:13:37)Trait1Dglobal - RMSE:29.270- r²:0.845
+Fold 3
+(02-02 20:15:36)Trait1Dtest - RMSE:67.100- r²:0.047
+(02-02 20:15:36)Trait1Dglobal - RMSE:67.026- r²:0.185
+Fold 4
+(02-02 20:17:56)Trait1Dtest - RMSE:52.777- r²:0.500
+(02-02 20:17:56)Trait1Dglobal - RMSE:30.109- r²:0.836
