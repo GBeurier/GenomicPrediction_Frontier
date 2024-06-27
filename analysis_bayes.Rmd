@@ -1,0 +1,123 @@
+---
+title: "Linking genetic markers and crop model parameters using neural networks to enhance Genomic Prediction of integrative traits"
+output: html_notebook
+---
+
+
+# Install and load packages, declare functions
+
+Three libraries are needed for the purpose of this analysis. The 'here' package manages relative paths. The 'caret' package is used to create folds for the k-fold crossvalidation. As for the 'glmnet' package, it is used to perform genomic prediction using the LASSO method.
+```{r}
+required_packages <- c("here", "caret", "glmnet")
+missing_packages <- setdiff(required_packages, rownames(installed.packages()))
+if(length(missing_packages)) install.packages(missing_packages)
+invisible(lapply(required_packages, library, character.only = T))
+
+normalizeData <- function(x, Df) {
+  return((x - min(Df, na.rm=T))/(max(Df, na.rm=T) - min(Df, na.rm=T)))
+}
+
+findFold <- function(row, folds) {
+  for(i in seq_along(folds)) {
+    if(row %in% folds[[i]]) {
+      return(i)
+    }
+  }
+  return(NA)
+}
+```
+
+
+# Import data
+
+The data can be found in the 'data' sub-folder of this repository. 
+The 'Markers.csv' file contains the marker data (rows, encoded as {-1, 0, 1}, see article for more information) for each genotype (columns) as well as the BLUP value of the complex integrative trait (first row of the file after the header).
+The 'Parameters.csv' file contains the "observed" parameter values for each genotype (rows), for the eight considered genotypic parameters (columns). 
+```{r}
+marker_data <- read.table(file.path(here("data"), "Markers.csv"), sep=",", header=T)
+
+# extract trait values from marker data
+trait_data <- data.frame(Trait = as.double(marker_data[1, 2:ncol(marker_data)]))
+# normalize trait data [0-1]
+trait_data$Trait <- sapply(trait_data, normalizeData, Df = trait_data$Trait)
+trait_data <- data.frame(Genotypes = colnames(marker_data)[2:ncol(marker_data)],
+                         Trait = trait_data$Trait)
+
+# remove row names and trait values from Markers.csv
+marker_data <- marker_data[2:nrow(marker_data), 2:ncol(marker_data)] 
+marker_data <- t(marker_data) # transpose dataframe so genotypes are rows and markers are cols
+
+param_data <- read.table(file.path(here("data"), "Parameters.csv"), sep=",", header=T)
+```
+
+
+# Data analysis
+
+Firstly, create the folds for the k-fold cross-validation. The folds used in the article are reported in the 'folds.csv' file of the data sub-folder in this repository.
+```{r}
+set.seed(1337)
+k_fold <- 5
+folds <- createFolds(1:nrow(trait_data), k=k_fold)
+
+# assign fold number to each observation
+trait_data$fold <- sapply(seq_len(nrow(trait_data)), findFold, folds=folds)
+```
+
+Secondly, perform k-fold cross-validation of the LASSO model and extract best lambda value
+```{r}
+lasso_res <- cv.glmnet(marker_data, trait_data$Trait, foldid=trait_data$fold, 
+                       alpha=1, nlambda=5000, maxit=5000)
+lamba_val <- lasso_res$lambda.min
+```
+
+Finally, run predictions for each fold and store results
+```{r}
+trait_results <- data.frame()
+for(i in 1:k_fold) {
+  y_test <- trait_data[folds[[i]],]
+  y_train <- trait_data[-folds[[i]],]
+  x_test <- marker_data[folds[[i]],]
+  x_train <- marker_data[-folds[[i]],]
+  
+  lasso_model <- glmnet(x_train, y_train$Trait, alpha=1, lambda=lamba_val)
+  lasso_predict <- predict(lasso_model, newx = x_test)
+  trait_results <- rbind(trait_results, data.frame(
+    Genotypes = trait_data[folds[[i]], "Genotypes"],
+    Observed = trait_data[folds[[i]], "Trait"],
+    Predicted = as.double(lasso_predict)
+  ))
+}
+```
+
+The same last two parts can be done for the parameter values
+```{r}
+param_results <- list()
+for(p in 2:ncol(param_data)) {
+  # extract parameter data and normalize
+  p_data <- sapply(param_data[,p], normalizeData, Df = param_data[,p])
+  
+  # k-fold cross validation
+  lasso_res <- cv.glmnet(marker_data, p_data, foldid=trait_data$fold, 
+                       alpha=1, nlambda=5000, maxit=5000)
+  
+  lamba_val <- lasso_res$lambda.min
+  
+  # run predictions
+  results <- data.frame()
+  for(i in 1:k_fold) {
+    y_test <- p_data[folds[[i]]]
+    y_train <- p_data[-folds[[i]]]
+    x_test <- marker_data[folds[[i]],]
+    x_train <- marker_data[-folds[[i]],]
+    
+    lasso_model <- glmnet(x_train, y_train, alpha=1, lambda=lamba_val)
+    lasso_predict <- predict(lasso_model, newx = x_test)
+    results <- rbind(results, data.frame(
+      Genotypes = param_data[folds[[i]], "Genotype"],
+      Observed = p_data,
+      Predicted = as.double(lasso_predict)
+    ))
+  }
+  param_results[[colnames(param_data)[p]]] <- results
+}
+```
